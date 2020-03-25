@@ -1,11 +1,12 @@
 require('dotenv').config();
 import "reflect-metadata";
 import express from "express"
-import {createExpressServer, useContainer, useExpressServer} from "routing-controllers";
+import {useContainer, useExpressServer} from "routing-controllers";
 import {Container} from "typedi";
 import debug from "debug";
 import logger from "morgan"
 import compression from "compression"
+import isAuth from "./middlewares/isAuth";
 import db from './database'
 
 useContainer(Container);
@@ -16,10 +17,8 @@ app.use(express.urlencoded({extended: true}));
 app.use(logger('tiny'));
 
 const server = useExpressServer(app, {
-    authorizationChecker: async (action) => {
-        console.log(action);
-        return false
-    },
+    authorizationChecker: async (action) => isAuth(action),
+    cors: true,
     routePrefix: "/api/v1",
     controllers: [__dirname + '/controllers/*.ts'],
     middlewares: []

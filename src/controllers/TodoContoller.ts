@@ -1,12 +1,19 @@
-import {Response, Request} from "express";
-import {Get, Res, Post, Body, JsonController, Put, Param, Delete, Authorized} from "routing-controllers"
+import {Request, Response} from "express";
+import {Authorized, Body, Delete, Get, JsonController, Param, Post, Put, Req, Res} from "routing-controllers"
 import Todo from "../database/models/Todo"
-import {MinLength} from "class-validator";
+import {IsBoolean, MinLength} from "class-validator";
 import User from "../database/models/User";
+
+interface IRequest extends Request {
+    user: User
+}
 
 class TodoBody {
     @MinLength(6)
-    title: String;
+    title?: String;
+
+    @IsBoolean()
+    completed?: boolean
 }
 
 @JsonController("/todos")
@@ -59,16 +66,22 @@ class TodoController {
         }
     }
 
+    @Authorized()
     @Put('/:id')
-    public async updateTodo(@Param("id") id: number, @Res() res: Response): Promise<any> {
+    public async updateTodo(@Param("id") id: number, @Body() updatedTodo: TodoBody, @Req() req: IRequest, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.findByPk(id);
+            const todo = await Todo.findOne({where: {id, userId: req.user.id}});
+
             if (!todo) {
                 throw new Error('Todo not found!')
+            } else {
+                const valuesToUpdate = await Object.keys(updatedTodo);
+                console.log(valuesToUpdate)
+                await todo.save()
             }
             return await res.json({
                 todo,
-                msg: 'Todo fetched successfully!'
+                msg: 'Todo updated successfully!'
             })
         } catch (e) {
             return res.json({
@@ -77,10 +90,11 @@ class TodoController {
         }
     }
 
+    @Authorized()
     @Delete('/:id')
-    public async deleteTodo(@Param("id") id: number, @Res() res: Response): Promise<any> {
+    public async deleteTodo(@Param("id") id: number, @Req() req: IRequest, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.findByPk(id);
+            const todo = await Todo.destroy({where: {id, userId: req.user.id}});
             if (!todo) {
                 throw new Error('Todo not found!')
             }

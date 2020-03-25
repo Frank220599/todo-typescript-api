@@ -2,25 +2,26 @@ import jwt from "jsonwebtoken";
 import User from "../database/models/User";
 
 
-const isAuth =  async (req, res, next) => {
+const isAuth = async ({request, response}) => {
     try {
-        const authHeader = await req.get('Authorization');
+        const authHeader = await request.get('Authorization');
         if (!authHeader) {
-            res.statusCode = 401;
+            response.statusCode = 401;
             throw new Error('Not authenticated!');
         }
         const token = authHeader.split(' ')[1];
-        let decodedToken = await jwt.verify(token, 'secret');
+        let decodedToken = await jwt.verify(token, 'secret') as { userId: number };
         if (!decodedToken) {
-            res.statusCode = 401;
+            response.statusCode = 401;
             throw new Error('Not authenticated!');
         }
-        req.user = await User.findByPk(decodedToken.userId);
-        next()
+        request.user = await User.findByPk(decodedToken.userId);
+        return true;
     } catch (e) {
-        throw res.status(500).json({
+        response.json({
             error: e.message
-        })
+        });
+        return false;
     }
 };
 
