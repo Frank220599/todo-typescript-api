@@ -1,20 +1,23 @@
 import {Request, Response} from "express";
-import {Authorized, Body, Delete, Get, JsonController, Param, Post, Put, Req, Res} from "routing-controllers"
+import {
+    Authorized,
+    Body,
+    CurrentUser,
+    Delete,
+    Get,
+    JsonController,
+    Param,
+    Post,
+    Put,
+    Req,
+    Res,
+    Redirect
+} from "routing-controllers"
+
 import Todo from "../database/models/Todo"
-import {IsBoolean, MinLength} from "class-validator";
 import User from "../database/models/User";
+import {TodoValidator} from "../validators";
 
-interface IRequest extends Request {
-    user: User
-}
-
-class TodoBody {
-    @MinLength(6)
-    title?: String;
-
-    @IsBoolean()
-    completed?: boolean
-}
 
 @JsonController("/todos")
 class TodoController {
@@ -50,9 +53,10 @@ class TodoController {
 
     @Authorized()
     @Post("/")
-    public async createTodo(@Body() newTodo: TodoBody, @Res() res: Response): Promise<any> {
+    public async createTodo(@CurrentUser() user: User, @Body() newTodo: TodoValidator, @Res() res: Response): Promise<any> {
+        console.log(user);
         try {
-            const todo = await Todo.create({
+            const todo = await user.$create('todo', {
                 ...newTodo
             });
             return await res.status(201).json({
@@ -68,17 +72,17 @@ class TodoController {
 
     @Authorized()
     @Put('/:id')
-    public async updateTodo(@Param("id") id: number, @Body() updatedTodo: TodoBody, @Req() req: IRequest, @Res() res: Response): Promise<any> {
+    public async updateTodo(@CurrentUser() user: User, @Param("id") id: number, @Body() updatedTodo: TodoValidator, @Req() req: Request, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.findOne({where: {id, userId: req.user.id}});
-
+            const todo = await Todo.findOne({where: {id, userId: user.id}});
             if (!todo) {
                 throw new Error('Todo not found!')
-            } else {
-                const valuesToUpdate = await Object.keys(updatedTodo);
-                console.log(valuesToUpdate)
-                await todo.save()
             }
+            Object.keys(updatedTodo).map(key => {
+                todo[key] = updatedTodo[key]
+            });
+            await todo.save();
+
             return await res.json({
                 todo,
                 msg: 'Todo updated successfully!'
@@ -92,12 +96,13 @@ class TodoController {
 
     @Authorized()
     @Delete('/:id')
-    public async deleteTodo(@Param("id") id: number, @Req() req: IRequest, @Res() res: Response): Promise<any> {
+    public async deleteTodo(@CurrentUser() user: User, @Param("id") id: number, @Req() req: Request, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.destroy({where: {id, userId: req.user.id}});
+            const todo = await Todo.findOne({where: {id, userId: user.id}});
             if (!todo) {
                 throw new Error('Todo not found!')
             }
+            await todo.destroy();
             return await res.json({
                 todo: id,
                 msg: 'Todo deleted successfully!'

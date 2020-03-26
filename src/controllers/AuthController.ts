@@ -3,35 +3,14 @@ import {Response} from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"
 import User from "../database/models/User";
-import {IsEmail, MinLength} from "class-validator";
-
-class SingupValidation {
-
-    @IsEmail()
-    email: string;
-
-    @MinLength(1)
-    private firstName: string;
-
-    @MinLength(6)
-    password: string;
-}
-
-class LoginValidation {
-
-    @IsEmail()
-    email: string;
-
-    @MinLength(6)
-    password: string;
-}
+import {LoginValidator, SingupValidator} from "../validators";
 
 
 @JsonController('/auth')
 class AuthController {
 
     @Post("/signup")
-    public async signup(@Body() newUser: SingupValidation, @Res() res: Response): Promise<any> {
+    public async signup(@Body() newUser: SingupValidator, @Res() res: Response): Promise<any> {
         try {
             const hashedPassword = await bcrypt.hash(newUser.password, 12);
             const user = await User.create({
@@ -50,7 +29,8 @@ class AuthController {
     }
 
     @Post('/login')
-    public async login(@Body() userBody: LoginValidation, @Res() res: Response): Promise<any> {
+    public async login(@Body() userBody: LoginValidator, @Res() res: Response): Promise<any> {
+        console.log(userBody)
         try {
             const user = await User.findOne({where: {email: userBody.email}});
             if (!user) {

@@ -12,6 +12,7 @@ class Todo extends Model<Todo> {
     completed: boolean;
 
     @ForeignKey(() => User)
+    @AllowNull(false)
     @Column
     userId: number;
 
