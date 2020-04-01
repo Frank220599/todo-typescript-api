@@ -9,7 +9,7 @@ class UserController {
     @Get("/")
     public async getUsers(@Res() res: Response): Promise<any> {
         try {
-            const users = await User.findAll();
+            const users = await User.findAll({attributes: {exclude: ['password']}});
             return await res.json({
                 users,
                 msg: "Users fetched successfully!"
@@ -24,7 +24,7 @@ class UserController {
     @Get('/:id')
     public async getUser(@Param('id') id: number, @Res() res: Response): Promise<any> {
         try {
-            const user = await User.findByPk(id, {include: [Todo]});
+            const user = await User.findByPk(id, {include: [Todo], attributes: {exclude: ['password']}});
             if (!user) {
                 throw new Error('User not found!');
             }

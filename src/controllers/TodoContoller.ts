@@ -11,23 +11,26 @@ import {
     Put,
     Req,
     Res,
-    Redirect
 } from "routing-controllers"
 
 import Todo from "../database/models/Todo"
 import User from "../database/models/User";
 import {TodoValidator} from "../validators";
+import {TodoRepository} from "../repositories/TodoRepository";
 
 
 @JsonController("/todos")
 class TodoController {
+
+    todoRepository = new TodoRepository('Todo');
+
     @Get("/")
-    public async getTodos(@Res() res: Response): Promise<any> {
+    public async getTodos(@Res() res: Response, @Req() req: Request): Promise<any> {
         try {
-            const todos = await Todo.findAll();
+            const data = await this.todoRepository.findAndCountAll(req);
             return await res.json({
-                todos,
-                msg: "Posts fetched successfully!"
+                todos: data,
+                msg: "Todos fetched successfully!"
             })
         } catch (e) {
             return res.json({
@@ -39,7 +42,7 @@ class TodoController {
     @Get("/:id")
     public async getTodo(@Param('id') id: number, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.findByPk(id, {include: [User]});
+            const todo = await this.todoRepository.getTodoWithUser(id);
             return await res.json({
                 todo,
                 msg: "Todos fetched successfully!"
@@ -54,10 +57,10 @@ class TodoController {
     @Authorized()
     @Post("/")
     public async createTodo(@CurrentUser() user: User, @Body() newTodo: TodoValidator, @Res() res: Response): Promise<any> {
-        console.log(user);
         try {
-            const todo = await user.$create('todo', {
-                ...newTodo
+            const todo = await this.todoRepository.create({
+                ...newTodo,
+                userId: user.id
             });
             return await res.status(201).json({
                 todo,
@@ -72,17 +75,10 @@ class TodoController {
 
     @Authorized()
     @Put('/:id')
-    public async updateTodo(@CurrentUser() user: User, @Param("id") id: number, @Body() updatedTodo: TodoValidator, @Req() req: Request, @Res() res: Response): Promise<any> {
+    public async updateTodo(@CurrentUser() user: User, @Param("id") id: number, @Body() newValues: TodoValidator,
+                            @Req() req: Request, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.findOne({where: {id, userId: user.id}});
-            if (!todo) {
-                throw new Error('Todo not found!')
-            }
-            Object.keys(updatedTodo).map(key => {
-                todo[key] = updatedTodo[key]
-            });
-            await todo.save();
-
+            const todo = await this.todoRepository.update(newValues, {where: {id, userId: user.id}});
             return await res.json({
                 todo,
                 msg: 'Todo updated successfully!'
@@ -98,11 +94,7 @@ class TodoController {
     @Delete('/:id')
     public async deleteTodo(@CurrentUser() user: User, @Param("id") id: number, @Req() req: Request, @Res() res: Response): Promise<any> {
         try {
-            const todo = await Todo.findOne({where: {id, userId: user.id}});
-            if (!todo) {
-                throw new Error('Todo not found!')
-            }
-            await todo.destroy();
+            const todo = await this.todoRepository.delete({where: {id, userId: user.id}});
             return await res.json({
                 todo: id,
                 msg: 'Todo deleted successfully!'

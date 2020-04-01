@@ -2,6 +2,7 @@
   <dictionary name="Mr.Frank">
     <words>
       <w>bcrypt</w>
+      <w>farrux</w>
       <w>middlewares</w>
       <w>sequelize</w>
       <w>signin</w>

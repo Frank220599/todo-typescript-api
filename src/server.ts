@@ -20,3 +20,5 @@ db.sync({force: false}).then(r => {
         console.log(`Server up and running on port ${port}`)
     })
 });
+
+export default server
