@@ -15,6 +15,9 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(logger('tiny'));
+app.get('/', (req, res) => {
+   res.send('Hello World!')
+});
 debug('http');
 
 export default app
