@@ -10,7 +10,10 @@ const queryBuilder = (req) => {
         offset: +(limit * (page - 1)) || 0,
         where: {
             ...restQueryParams
-        }
+        },
+        order: [
+            ['id','DESC']
+        ]
     }
 };
 
