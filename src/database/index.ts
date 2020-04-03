@@ -1,14 +1,12 @@
 import {Sequelize} from "sequelize-typescript";
+// @ts-ignore
+import config from './config'
+
+const options = config[process.env.NODE_ENV];
 
 const sequelize = new Sequelize({
+    ...options,
     models: [__dirname + '/models/*.ts'],
-    database: 'ts',
-    host: process.env.DB_HOST,
-    port: 3306,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    dialect: "mysql",
-    logging: false
 });
 
 

@@ -38,7 +38,7 @@ abstract class CrudRepository<T> implements IWrite<T>, IRead<T> {
         return result
     }
 
-    public async findByPk(id: string): Promise<T> {
+    public async findByPk(id: number, options?: FindOptions): Promise<T> {
         return this.findOne({where: {id}})
     }
 

@@ -30,9 +30,11 @@ class AuthController {
 
     @Post('/login')
     public async login(@Body() userBody: LoginValidator, @Res() res: Response): Promise<any> {
-        console.log(userBody)
         try {
-            const user = await User.findOne({where: {email: userBody.email}});
+            const user = await User.findOne({
+                where: {email: userBody.email},
+                attributes: {include: ['password']}
+            });
             if (!user) {
                 throw new Error('User not found!')
             }
@@ -44,7 +46,7 @@ class AuthController {
                 email: user.email,
                 userId: user.id,
             }, 'secret', {expiresIn: '1h'});
-            return await res.status(201).json({
+            return await res.json({
                 token,
                 user,
             })

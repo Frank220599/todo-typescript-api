@@ -5,7 +5,7 @@ import User from "../database/models/User";
 export class TodoRepository extends CrudRepository<Todo> {
 
     public async getTodoWithUser(id: number) {
-        return this.model.findByPk(id, {include: [User]});
+        return this.findByPk(id, {include: [User]});
     }
 
 }

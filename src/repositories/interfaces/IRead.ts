@@ -4,7 +4,7 @@ import {FindOptions} from "sequelize";
 interface IRead<T> {
     findOne(options: FindOptions): Promise<T>;
 
-    findByPk(id: string): Promise<T>;
+    findByPk(id: number): Promise<T>;
 
     findAndCountAll(req: Request): Promise<T[]>
 }

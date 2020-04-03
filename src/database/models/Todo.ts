@@ -7,6 +7,7 @@ class Todo extends Model<Todo> {
     @Column
     title: string;
 
+
     @Default(false)
     @Column
     completed: boolean;
