@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "",
     "start": "cross-env NODE_ENV=production ts-node src/server.ts",
     "start:dev": "tsnd src/server.ts",
     "migrate:prod": "cross-env NODE_ENV=production sequelize db:migrate",
