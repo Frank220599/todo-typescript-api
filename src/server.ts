@@ -17,7 +17,8 @@ const server = useExpressServer(app, {
 db.sync({force: false}).then(r => {
     const port = 8080 || process.env.PORT;
     server.listen(port, () => {
-        console.log(`Server up and running on port ${port}`)
+        if (process.env.NODE_ENV !== 'test')
+            console.log(`Server up and running on port ${port}`)
     })
 });
 
